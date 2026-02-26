@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TLEye System</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #31393c;
+      --accent-color: #31393c;
+      --section-bg: #edeeed;
+      --border-color: #edeeeb;
+      --muted-text: #adb5bd;
+      --header-txt: #181b1e;
+    }
+
+    body.dark-mode {
+      --bg-color: #181b1e;
+      --text-color: #ffffff;
+      --accent-color: #5f6266;
+      --section-bg: #333f3f;
+      --border-color: #181b1e;
+      --muted-text: #adb5bd;
+      --header-txt: #ffffff;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif, 'SF Pro Display';
+      margin: 0;
+      padding: 10px 20px;
+      line-height: 1.6;
+      overflow: hidden;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      color: var(--header-txt);
+      filter: drop-shadow(2px 2px 47px var(--header-txt));
+      font-size: 2.5rem;
+      font-weight: lighter;
+      margin-bottom: 20px;
+      align-self: top;
+      transform: translate(0, -20vh);
+      z-index: 2;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 400;
+      margin-bottom: 20px;
+      color: var(--text-color);
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 400;
+      margin-bottom: 15px;
+      color: var(--text-color);
+    }
+
+    img, video {
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      max-width: 90%;
+      margin-top: 20px;
+      box-shadow: none;
+    }
+
+    button {
+      gap: 10px;
+      background-color: var(--accent-color), 0.5;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 8px;
+      font-weight: 400;
+      transition: background-color 0.2s;
+      box-shadow: none;
+    }
+
+    button:hover {
+      background-color: var(--header-txt);
+    }
+
+    button:disabled {
+      background-color: var(--muted-text);
+      cursor: not-allowed;
+    }
+
+    .upload-section {
+      margin: 40px auto;
+      max-width: 600px;
+      padding: 30px;
+      background-color: var(--section-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    input[type="file"] {
+      color: var(--text-color);
+      margin: 15px 0;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: var(--bg-color);
+    }
+
+    input[type="file"]:hover {
+      background-color: var(--section-bg);
+    }
+
+
+    input[type="file"]::file-selector-button {
+      display: none;
+    }
+
+    select {
+      color: var(--text-color);
+      margin: 10px;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: var(--bg-color);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    #stats {
+      margin: 40px auto;
+      max-width: 600px;
+      padding: 30px;
+      background-color: var(--section-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    #stats p {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: var(--muted-text);
+      margin: 0;
+      white-space: pre-line;
+    }
+
+    footer {
+      margin-top: auto;
+      padding-top: 20px;
+      text-align: center;
+      color: var(--muted-text);
+      font-size: 14px;
+    }
+
+    #theme-toggle {
+      display: flex;
+      flex:1;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--accent-color);
+      padding: 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    #theme-toggle:hover {
+      background-color: var(--section-bg);
+    }
+
+    .control-buttons {
+      display: flex;
+      align-self: center;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px 10px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .upload-section, #stats {
+        margin: 20px auto;
+        padding: 20px;
+      }
+
+      .control-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    .trafficlight{
+      background: #222;
+      background-image: linear-gradient(transparent 2%, #111 2%, transparent 3%, #111 30%);
+      width: 170px;
+      height: 400px;
+      border-radius: 20px;
+      position: relative;
+      border: solid 5px #333;
+    }
+    
+    .trafficlight:before{
+      background: #222;
+      background-image: radial-gradient(#444, #000);
+      content: "";
+      width: 170px;
+      height: 150px;
+      margin: 0 auto;
+      position: absolute;
+      top: -20px;
+      margin-left: 0px;
+      border-radius: 50%;
+      z-index: -1;
+    }
+    
+    .trafficlight:after{
+      background: #222;
+      background-image: linear-gradient(-0deg, #777 10%, #ccc 30%, #000);
+      content: "";
+      width: 50px;
+      height: 500px;
+      margin-left: 60px;
+      position: absolute;
+      top: 150px;
+      z-index: -1;
+    }
+    
+    .protector{
+      background: transparent;
+      width: 180px;
+      height: 0;
+      position: absolute;
+      top: 20px;
+      left: -35px;
+      border-right: solid 30px transparent;
+      border-left: solid 30px transparent;
+      border-top: solid 90px #111;
+      border-radius: 10px;
+      z-index: -1;
+    }
+    
+    .protector:nth-child(2){
+      top: 140px;
+    }
+    
+    .protector:nth-child(3){
+      top: 260px;
+    }
+    
+    .red{
+      background: red;
+      background-image: radial-gradient(brown, transparent);
+      background-size: 5px 5px; 
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      position: absolute;
+      top: 20px;
+      left: 35px;
+      animation: 30s red infinite;
+      border: dotted 2px red;
+      box-shadow: 
+        0 0 20px #111 inset,
+        0 0 10px red;
+    }
+    
+    .yellow{
+      background: yellow;
+      background-image: radial-gradient(orange, transparent);
+      background-size: 5px 5px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: dotted 2px yellow;
+      position: absolute;
+      top: 145px;
+      left: 35px;
+      animation: 90s yellow infinite;
+      box-shadow: 
+        0 0 20px #111 inset,
+        0 0 10px yellow;
+    }
+    
+    .green{
+      background: green;
+      background-image: radial-gradient(lime, transparent);
+      background-size: 5px 5px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: dotted 2px lime;
+      position: absolute;
+      top: 270px;
+      left: 35px;
+      box-shadow: 
+        0 0 20px #111 inset,
+        0 0 10px lime;
+      animation: 30s green infinite;
+    }
+    
+    @keyframes red{
+      0%{opacity: 1}
+      20%{opacity: 1}
+      40%{opacity: 1}
+      60%{opacity: .1}
+      80%{opacity: .1}
+      100%{opacity: .1}
+    }
+    
+    @keyframes yellow{
+      0%{opacity: .1}
+      20%{opacity: .1}
+      40%{opacity: 1}
+      50%{opacity: .1}
+      60%{opacity: .1}
+      80%{opacity: .1}
+      100%{opacity: .1}
+    }
+    
+    @keyframes green{
+      0%{opacity: .1}
+      20%{opacity: .1}
+      40%{opacity: .1}
+      60%{opacity: 1}
+      80%{opacity: 1}
+      83%{opacity: .1}
+      86%{opacity: 1}
+      89%{opacity: .1}
+      93%{opacity: 1}
+      96%{opacity: .1}
+      100%{opacity: 1}
+    }
+    .upload-section{
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .main{
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .sidepanels{
+      display: flex;
+      flex-direction: column;
+      width: 45%;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 30px;
+      background-color: var(--section-bg);
+      border-left: 1px solid var(--border-color);
+      text-align: left;
+      gap: 10px;
+      overflow-y: auto;
+      margin-right: -6.7vw; /**6,7**/
+    }
+    .sidepanels::-webkit-scrollbar{
+      width: 8px;
+      background: var(--border-color);
+      scroll-behavior: smooth;
+    }
+    .sidepanels::-webkit-scrollbar-thumb{
+      background: var(--accent-color);
+      border-radius: 25px;
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <button id="theme-toggle">🚥</button>
+      <h1>TLEye System</h1>
+      <div class="trafficlight">
+        <div class="protector"></div>
+        <div class="protector"></div>
+        <div class="protector"></div>
+        <div class="red"></div>
+        <div class="yellow"></div>
+        <div class="green"></div>
+      </div>
+  </div>
+  
+  <div class="sidepanels">
+    <div class="control-buttons">
+      <button id="toggleBtn" onclick="toggleCamera()">Start Camera</button>
+      <button id="lineBtn" onclick="toggleLine()">Toggle Dynamic Line</button>
+    </div>
+
+    <div>
+      <img id="videoStream" src="">
+    </div>
+
+    <div class="upload-section">
+      <h2>Upload Image</h2>
+      <input type="file" id="photoInput" accept="image/*">
+      <button onclick="uploadPhoto()">Detect Image</button>
+      <div><img id="photoResult" src=""></div>
+    </div>
+
+    <div class="upload-section">
+      <h2>Upload Video</h2>
+      <input type="file" id="videoInput" accept="video/*">
+      <button onclick="uploadVideo()">Detect Video</button>
+      <div><img id="videoResult" src=""></div>
+    </div>
+
+    <div class="upload-section">
+      <h2>Device Settings</h2>
+      <label for="cameraSelect">Camera:</label>
+      <select id="cameraSelect"></select>
+      <label for="micSelect">Microphone:</label>
+      <select id="micSelect"></select>
+      <button onclick="setDevices()">Set Devices</button>
+    </div>
+    <div id="stats">
+        <h3>Detection Stats</h3>
+        <p id="summary">Loading...</p>
+    </div>
+  </div>
+  
+  <footer>
+    <p>&copy; Group 3 Gilgal 2025 TLEye System</p>
+  </footer>
+
+  <script>
+    let cameraOn = false;
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    document.getElementById('lineBtn').innerText = 'Disable Dynamic Line';
+
+    // Load theme from localStorage
+    if (localStorage.getItem('theme') === 'dark') {
+      body.classList.add('dark-mode');
+      themeToggle.textContent = '🚦';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark-mode');
+      if (body.classList.contains('dark-mode')) {
+        themeToggle.textContent = '🚦';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        themeToggle.textContent = '🚥';
+        localStorage.setItem('theme', 'light');
+      }
+    });
+
+    function toggleCamera() {
+      fetch('/toggle_camera', { method: 'POST' })
+        .then(response => response.text())
+        .then(text => {
+          cameraOn = text.includes('on');
+          document.getElementById('videoStream').src = cameraOn ? '/video_feed' : '';
+          document.getElementById('toggleBtn').innerText = cameraOn ? 'Stop Camera' : 'Start Camera';
+        });
+    }
+
+    function toggleLine() {
+      fetch('/toggle_dynamic_line', { method: 'POST' })
+        .then(response => response.text())
+        .then(text => {
+          document.getElementById('lineBtn').innerText = text.includes('enabled') ? 'Disable Dynamic Line' : 'Enable Dynamic Line';
+        });
+    }
+
+    function uploadPhoto() {
+      const file = document.getElementById('photoInput').files[0];
+      if (!file) return alert("Please select a photo first!");
+      const formData = new FormData();
+      formData.append('file', file);
+      fetch('/upload_photo', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          window.location.href = data.redirect_url;
+        });
+    }
+
+    async function uploadVideo() {
+      const fileInput = document.getElementById('videoInput');
+      const file = fileInput.files[0];
+      if (!file) return alert("Please select a video first!");
+        
+      const formData = new FormData();
+      formData.append('file', file);
+        
+      const button = document.querySelector("button[onclick='uploadVideo()']");
+      button.disabled = true;
+      button.innerText = "Processing...";
+        
+      try {
+        const response = await fetch('/upload_video_feed', {
+          method: 'POST',
+          body: formData
+        });
+      
+        if (!response.ok) throw new Error('Upload failed');
+        const data = await response.json();
+      
+        // Redirect to results page
+        window.location.href = data.redirect_url;
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        button.disabled = false;
+        button.innerText = "Detect Video";
+        fileInput.value = '';  // Reset file input to allow re-upload of same file if modified
+      }
+}
+
+
+
+    async function updateStats() {
+      try {
+        const res = await fetch('/stats');
+        const data = await res.json();
+        document.getElementById('summary').innerText =
+          `Total Detections: ${data.total_detections}\n` +
+          `Non-Emergency Vehicles: ${data.vehicles_detected}\n` +  // Updated label
+          `Emergency Vehicles: ${data.emergency_detected}`;  // Added emergency stat
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    setInterval(updateStats, 1000);
+
+    loadDevices();
+
+    function loadDevices() {
+      fetch('/get_devices')
+        .then(res => res.json())
+        .then(data => {
+          const camSel = document.getElementById('cameraSelect');
+          camSel.innerHTML = '';
+          data.cameras.forEach(cam => {
+            const opt = document.createElement('option');
+            opt.value = cam;
+            opt.text = `Camera ${cam}`;
+            camSel.appendChild(opt);
+          });
+          const micSel = document.getElementById('micSelect');
+          micSel.innerHTML = '';
+          data.mics.forEach(mic => {
+            const opt = document.createElement('option');
+            opt.value = mic.index;
+            opt.text = mic.name;
+            micSel.appendChild(opt);
+          });
+        });
+    }
+
+    function setDevices() {
+      const camera = document.getElementById('cameraSelect').value;
+      const mic = document.getElementById('micSelect').value;
+      fetch('/set_devices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ camera: camera, mic: mic })
+      }).then(() => alert('Devices set!'));
+    }
+  </script>
+</body>
+</html>

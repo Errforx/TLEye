@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🚦 Real-Time Traffic Light Detection System</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f4f7fb;
+      color: #111;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(90deg, #0b78d1, #075a9e);
+      color: white;
+      text-align: center;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      padding: 24px 32px 32px;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #0b78d1;
+    }
+
+    button {
+      background: #0b78d1;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #095f9f; }
+    button.secondary {
+      background: #e6e9ed;
+      color: #111;
+    }
+
+    .status {
+      font-size: 14px;
+      color: #333;
+      margin-left: 10px;
+    }
+
+    #video-stream, #preview-area {
+    width: 100%;
+    max-height: 270px;
+    background: #000;
+    border-radius: 10px;
+    border: 2px solid #222;
+    object-fit: cover;
+    margin: 10px 0 20px 0;
+    display: block;
+}
+
+
+    input[type="file"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 28px 0;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .tiny {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .live-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: red;
+      margin-left: 6px;
+      animation: blink 1s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+      0%, 50%, 100% { opacity: 1; }
+      25%, 75% { opacity: 0.2; }
+    }
+
+    footer {
+      text-align: center;
+      padding: 12px;
+      color: #999;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>🚦 Real-Time Traffic Light Detection System</header>
+
+  <div class="container">
+
+    <!-- ======= CAMERA STREAM ======= -->
+    <h2>Live Camera Stream</h2>
+    <div class="row">
+      <button id="toggle-btn">Toggle Camera</button>
+      <span class="status" id="camera-status">Camera: OFF</span>
+      <span id="live-dot" class="live-indicator" style="display:none"></span>
+    </div>
+
+    <img id="video-stream" src="" alt="Live Stream Feed">
+
+    <hr>
+
+    <!-- ======= UPLOAD IMAGE / VIDEO ======= -->
+    <h2>Upload Image or Video</h2>
+<form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="row">
+  <input type="file" name="file" accept="image/*,video/*" required>
+  <button type="submit">Upload & Detect</button>
+</form>
+
+{% if preview_url %}
+  <div class="file-preview">
+    <img src="{{ preview_url }}" alt="Annotated Preview">
+  </div>
+{% endif %}
+
+
+    <div id="preview-container">
+      {% if preview_url %}
+        <img id="preview-area" src="{{ preview_url }}" alt="Detected Image Preview">
+      {% else %}
+        <img id="preview-area" src="" alt="Detected Preview" style="display:none">
+      {% endif %}
+    </div>
+
+    <hr>
+
+    <!-- ======= STATUS ======= -->
+    <h2>System Status</h2>
+    <div class="tiny">
+      Detection Engine: YOLO + OpenVINO<br>
+      Controller: {{ 'Active' if camera_active else 'Idle' }}<br>
+      Mode: Real-Time MJPEG Streaming
+    </div>
+
+  </div>
+
+  <footer>© 2025 Detection System — Flask + YOLO + OpenVINO</footer>
+
+  <script>
+    const toggleBtn = document.getElementById('toggle-btn');
+    const cameraStatus = document.getElementById('camera-status');
+    const videoStream = document.getElementById('video-stream');
+    const liveDot = document.getElementById('live-dot');
+    const uploadForm = document.getElementById('upload-form');
+    const previewArea = document.getElementById('preview-area');
+    const uploadMsg = document.getElementById('upload-message');
+
+    // ---- CAMERA TOGGLE ----
+    toggleBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      toggleBtn.disabled = true;
+
+      try {
+        const res = await fetch('/toggle_camera', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.camera_active) {
+            cameraStatus.textContent = 'Camera: ON';
+            liveDot.style.display = 'inline-block';
+            videoStream.src = '/video_feed?' + new Date().getTime();
+          } else {
+            cameraStatus.textContent = 'Camera: OFF';
+            liveDot.style.display = 'none';
+            videoStream.src = '';
+          }
+        }
+      } catch (err) {
+        console.error('Camera toggle failed:', err);
+      }
+
+      toggleBtn.disabled = false;
+    });
+
+    // ---- UPLOAD FORM (show streaming for videos) ----
+    uploadForm.addEventListener('submit', (e) => {
+      const fileInput = document.getElementById('file-input');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      const isVideo = ['mp4','mov','avi','mkv','webm'].includes(ext);
+
+      if (isVideo) {
+        // Show real-time streamed annotated frames for uploaded video
+        e.preventDefault();
+        previewArea.style.display = 'block';
+        previewArea.src = '/upload_file'; // stream will come from Response
+        uploadForm.submit(); // let Flask handle stream
+      } else {
+        // normal image upload, show static annotated image
+        uploadMsg.textContent = 'Processing image...';
+      }
+    });
+  </script>
+</body>
+</html>

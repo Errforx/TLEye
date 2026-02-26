@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detection Results</title>
+  <style>
+    :root {
+      --bg-color: #f0f4f8;
+      --text-color: #333;
+      --accent-color: #38bdf8;
+      --section-bg: #ffffff;
+      --border-color: #d0d7de;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --text-color: #f1f1f1;
+      --accent-color: #38bdf8;
+      --section-bg: #000;
+      --border-color: #333;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: "Segoe UI", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    header {
+      background-color: var(--section-bg);
+      padding: 15px;
+      font-size: 1.5em;
+      font-weight: bold;
+      border-bottom: 2px solid var(--border-color);
+    }
+    #video-container {
+      width: 90%;
+      max-width: 640px;
+      margin: 20px auto;
+      background: var(--section-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    button {
+      background-color: #28a745;
+      border: none;
+      color: white;
+      padding: 10px 18px;
+      margin-top: 15px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1e7e34;
+    }
+    #theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--text-color);
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle">🚥</button>
+  <header>🔍 Detection Results</header>
+  <div id="video-container">
+    <img id="videoFeed" src="" alt="Detection Feed">
+  </div>
+  <button id="lineBtn" onclick="toggleLine()">Toggle Dynamic Line</button>
+  <button id="backBtn">⬅ Back to Main</button>
+  <div style="margin-top: 20px; text-align: center;">
+    <h3>Device Settings</h3>
+    <label for="cameraSelect">Camera:</label>
+    <select id="cameraSelect"></select>
+    <label for="micSelect">Microphone:</label>
+    <select id="micSelect"></select>
+    <button onclick="setDevices()">Set Devices</button>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get("source");
+    const videoFeed = document.getElementById("videoFeed");
+
+    if (source === "video") {
+      videoFeed.src = "/upload_video_feed";
+    } else if (source === "photo") {
+      videoFeed.src = "/upload_photo";
+    }
+
+    document.getElementById('lineBtn').innerText = 'Disable Dynamic Line';
+
+    document.getElementById("backBtn").addEventListener("click", async () => {
+      window.location.href = "/";
+    });
+
+    function toggleLine() {
+      fetch('/toggle_dynamic_line', { method: 'POST' })
+        .then(response => response.text())
+        .then(text => {
+          document.getElementById('lineBtn').innerText = text.includes('enabled') ? 'Disable Dynamic Line' : 'Enable Dynamic Line';
+        });
+    }
+
+    loadDevices();
+
+    function loadDevices() {
+      fetch('/get_devices')
+        .then(res => res.json())
+        .then(data => {
+          const camSel = document.getElementById('cameraSelect');
+          camSel.innerHTML = '';
+          data.cameras.forEach(cam => {
+            const opt = document.createElement('option');
+            opt.value = cam;
+            opt.text = `Camera ${cam}`;
+            camSel.appendChild(opt);
+          });
+          const micSel = document.getElementById('micSelect');
+          micSel.innerHTML = '';
+          data.mics.forEach(mic => {
+            const opt = document.createElement('option');
+            opt.value = mic.index;
+            opt.text = mic.name;
+            micSel.appendChild(opt);
+          });
+        });
+    }
+
+    function setDevices() {
+      const camera = document.getElementById('cameraSelect').value;
+      const mic = document.getElementById('micSelect').value;
+      fetch('/set_devices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ camera: camera, mic: mic })
+      }).then(() => alert('Devices set!'));
+    }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Load theme from localStorage
+    if (localStorage.getItem('theme') === 'dark') {
+      body.classList.add('dark-mode');
+      themeToggle.textContent = '🚦';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark-mode');
+      if (body.classList.contains('dark-mode')) {
+        themeToggle.textContent = '🚦';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        themeToggle.textContent = '🚥';
+        localStorage.setItem('theme', 'light');
+      }
+    });
+  </script>
+</body>
+</html>

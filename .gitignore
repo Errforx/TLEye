@@ -1,0 +1,22 @@
+# Ignore node modules
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore environment variables
+.env
+
+#Ignore Python bytecode
+__pycache__/
+.vscode/
+
+#Ignore virtual environment
+venv/
+
+#Ignore PEM files
+*.pem
+
+# Ignore build artifacts
+dist/
+*.exe
